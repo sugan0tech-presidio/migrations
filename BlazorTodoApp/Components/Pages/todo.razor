@@ -1,0 +1,99 @@
+﻿@page "/todo"
+@inject NavigationManager Navigation
+
+<h3>Todo List</h3>
+
+<!-- Form to Add New Task -->
+<EditForm Model="newTodo" OnValidSubmit="AddTodo">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="task">Task:</label>
+        <InputText id="task" class="form-control" @bind-Value="newTodo.Task" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Task</button>
+</EditForm>
+
+<hr />
+
+<!-- List of Todo Items -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Task</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var todo in todos)
+        {
+            <tr>
+                <td>@todo.Task</td>
+                <td>@(todo.IsCompleted ? "Completed" : "Pending")</td>
+                <td>
+                    <button class="btn btn-success" @onclick="() => MarkAsCompleted(todo.Id)" disabled="@todo.IsCompleted">Complete</button>
+                    <button class="btn btn-danger" @onclick="() => DeleteTodo(todo.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private TodoItem newTodo = new TodoItem();
+    private List<TodoItem> todos = new List<TodoItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTodos();
+    }
+
+    private Task LoadTodos()
+    {
+        // Load initial todos (in a real app, you would load these from a database)
+        todos = new List<TodoItem>
+        {
+            new TodoItem { Id = 1, Task = "Learn Blazor", IsCompleted = false },
+            new TodoItem { Id = 2, Task = "Build a Todo App", IsCompleted = false }
+        };
+        return Task.CompletedTask;
+    }
+
+    private void AddTodo()
+    {
+        if (!string.IsNullOrEmpty(newTodo.Task))
+        {
+            newTodo.Id = todos.Count + 1; // Simple ID generation
+            todos.Add(newTodo);
+            newTodo = new TodoItem(); // Reset the form
+        }
+    }
+
+    private void MarkAsCompleted(int id)
+    {
+        var todo = todos.FirstOrDefault(t => t.Id == id);
+        if (todo != null)
+        {
+            todo.IsCompleted = true;
+        }
+    }
+
+    private void DeleteTodo(int id)
+    {
+        var todo = todos.FirstOrDefault(t => t.Id == id);
+        if (todo != null)
+        {
+            todos.Remove(todo);
+        }
+    }
+
+    private class TodoItem
+    {
+        public int Id { get; set; }
+        public string Task { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+}
