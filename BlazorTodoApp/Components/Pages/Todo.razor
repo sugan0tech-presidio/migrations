@@ -1,0 +1,80 @@
+﻿@page "/todo"
+@inject ITodoService TodoService
+
+<h3>Todo List</h3>
+
+<EditForm Model="newTodo" OnValidSubmit="AddTodo" FormName="addTodoForm">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <div class="form-group">
+        <label for="task">Task:</label>
+        <InputText id="task" class="form-control" @bind-Value="newTodo.Task"/>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Add Task</button>
+</EditForm>
+
+<hr/>
+
+<!-- List of Todo Items -->
+<table class="table">
+    <thead>
+    <tr>
+        <th>Task</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var todo in todos)
+    {
+        <tr>
+            <td>@todo.Task</td>
+            <td>@(todo.IsCompleted ? "Completed" : "Pending")</td>
+            <td>
+                <button class="btn btn-success" @onclick="() => MarkAsCompleted(todo.Id)" disabled="@todo.IsCompleted">Complete</button>
+                <button class="btn btn-danger" @onclick="() => DeleteTodo(todo.Id)">Delete</button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private TodoItem newTodo = new();
+    private List<TodoItem> todos = new ();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTodos();
+    }
+
+    private async Task LoadTodos()
+    {
+        todos = await TodoService.GetTodosAsync();
+    }
+
+    private async Task AddTodo()
+    {
+        if (!string.IsNullOrEmpty(newTodo.Task))
+        {
+            await TodoService.AddTodoAsync(newTodo);
+            await LoadTodos(); 
+            newTodo = new TodoItem(); 
+        }
+    }
+
+    private async Task MarkAsCompleted(int id)
+    {
+        await TodoService.MarkAsCompletedAsync(id);
+        await LoadTodos(); 
+    }
+
+    private async Task DeleteTodo(int id)
+    {
+        await TodoService.DeleteTodoAsync(id);
+        await LoadTodos(); 
+    }
+
+}
