@@ -15,6 +15,21 @@ public class Program
         builder.Services.AddDbContext<TodoContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
         builder.Services.AddScoped<ITodoService, TodoService>();
+        
+        #region Cors
+
+        builder.Services.AddCors(opts =>
+        {
+            opts.AddPolicy("AllowAll",
+                corsPolicyBuilder =>
+                {
+                    corsPolicyBuilder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173",
+                            "https://orange-hill-0f44ca01e.5.azurestaticapps.net")
+                        .AllowCredentials();
+                });
+        });
+
+        #endregion
 
         var app = builder.Build();
 
@@ -28,6 +43,7 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+        app.UseCors("AllowAll");
 
         app.UseRouting();
 
